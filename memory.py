@@ -9,7 +9,7 @@ import random
 
 # globals
 ##
-CARD_WIDTH = 50
+CARD_WIDTH = 65
 CARD_HEIGHT = 100
 DISTINCT_CARDS = 8
 
@@ -46,18 +46,20 @@ class Card(object):
     # draw method for Cards
     def draw_Card(self, canvas):
         loc = self.location
+        card_corners = (loc[0], loc[1], loc[0] + CARD_WIDTH, loc[1] - CARD_HEIGHT)
+
         if self.exposed:
-            text_location = [loc[0] + 0.2 * CARD_WIDTH, loc[1] - 0.3 * CARD_HEIGHT]
-            canvas.draw_text(str(self.number), text_location, CARD_WIDTH, 'white')
+            text_location = [loc[0] + 0.5 * CARD_WIDTH, loc[1] - 0.45 * CARD_HEIGHT]
+            canvas.create_rectangle(card_corners, fill='white', outline='black')
+            canvas.create_text(text_location, font=('Helvetica', 55), text=str(self.number), fill='black')
         else:
-            card_corners = (loc[0], loc[1], loc[0] + CARD_WIDTH, loc[1] - CARD_HEIGHT)
             canvas.create_rectangle(card_corners, fill='green', outline='black')
             
     # selection method for Cards
-    def is_selected(self, pos):
-        inside_hor = self.location[0] <= pos[0] < self.location[0] + CARD_WIDTH
-        inside_vert = self.location[1] - CARD_HEIGHT <= pos[1] <= self.location[1]
-        return  inside_hor and inside_vert 
+    def is_selected(self, event):
+        inside_horiz = self.location[0] <= event.x < self.location[0] + CARD_WIDTH
+        inside_vert = self.location[1] - CARD_HEIGHT <= event.y <= self.location[1]
+        return  inside_horiz and inside_vert
 
 
 class MemoryGame(Frame):
@@ -84,55 +86,49 @@ class MemoryGame(Frame):
         self.turn = turn
 
     def makeWidgets(self):
-        """ create label to display turn number """
-        l = Label(self, textvariable=self.turn, fg='white', bg='black', width=10, height=2)
-        l.config(font=('Courier', 32))
-        l.pack(fill=X, expand=NO, pady=2, padx=2) 
+        """ create widgets """
+        #  Consider moving buttons and label here
+        pass
+        
 
     def Reset(self):
         for card in self.deck:
             self.exposed = False
         self.turn = 1
         self.game_state = 0
+    
+    def mouseHandler(self, event):
+        """ handles user input, manages game state and status of cards """
+        global game_state, turn, c1_index, c2_index, w
+
+        # TESTS click functionality
+        print "Clicked at ", event.x, event.y
+
+        for card in deck:
+            if card.is_selected(event):
+                clicked_card = card
+                
+        if clicked_card.is_exposed():
+            return
         
-
-# Event handlers
-##
-
-# TESTS click functionality
-def callback(event):
-    print "Clicked at ", event.x, event.y
-
-def mouseclick(pos):
-    """ handles mouse clicks and the game state (0, 1 or 2) """
-    global game_state, turn, c1_index, c2_index, w
+        clicked_card.expose_Card()
+        
+        # handle game states
+        if game_state == 0:
+            c1_index = clicked_card
+            game_state = 1
     
-    print pos
-
-    for card in deck:
-        if card.is_selected(pos):
-            clicked_card = card
-            
-    if clicked_card.is_exposed():
-        return
+        if game_state == 1:
+            c2_index = clicked_card
+            game_state = 2
     
-    clicked_card.expose_Card()
+        if game_state == 2 and c2_index is not c1_index:
+            c2_index.hide_Card()
+            c1_index.hide_Card()
+            game_state = 1
+            turn += 1
     
-    # handle game states
-    if game_state == 0:
-        c1_index = clicked_card
-        game_state = 1
-
-    if game_state == 1:
-        c2_index = clicked_card
-        game_state = 2
-
-    if game_state == 2 and c2_index is not c1_index:
-        c2_index.hide_Card()
-        c1_index.hide_Card()
-        game_state = 1
-
-    draw(w)
+        draw(w)
 
            
 # draw handler
@@ -145,20 +141,23 @@ def draw(canvas):
 # start frame and game
 ##
 def main():
+    global w, turn
+
     root = Tk()
     root.configure(background='black')
     game = MemoryGame(root)
     game.pack(side=TOP)
 
-    w = Canvas(root, width=800, height=100)
-    w.bind("<Button-1>", callback)
+    w = Canvas(root, width=16*CARD_WIDTH, height=CARD_HEIGHT)
+    w.bind("<Button-1>", game.mouseHandler)
     
     draw(w)
 
     Button(root, text='Reset', command=game.Reset).pack(side=LEFT)
     Button(root, text='Quit', command=root.quit).pack(side=LEFT)
+    Label(root, text='Turn: ' + str(turn), font=('Helvetica',12), fg='white', bg='black').pack(side=LEFT)
     w.pack()
-
+        
     root.mainloop()
 
 if __name__ == '__main__':

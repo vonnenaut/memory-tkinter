@@ -127,10 +127,6 @@ class MemoryGame(tk.Frame):
     
     def mouseHandler(self, event):
         """ handles user input, manages game state and status of cards """
-        # TESTS click functionality
-        print "Clicked at ", event.x, event.y
-        print "\nmouseHandler: Initial game state: ", self.game_state
-
         for card in self.deck:
             if card.is_selected(event):
                 self.clicked_card = card
@@ -145,18 +141,12 @@ class MemoryGame(tk.Frame):
         # handle game states
         if self.game_state == 0:
             self.card1 = self.clicked_card
-            print "card1: ", self.card1
-            print "card2: ", self.card2
             self.game_state = 1
-            print "After-click game state: ", self.game_state, "\n"
     
         elif self.game_state == 1:
             self.card2 = self.clicked_card
-            print "card1: ", self.card1
-            print "card2: ", self.card2
             self.game_state = 2
-            print "After-click game state: ", self.game_state, "\n"
-    
+            
         else: 
             if self.card2.get_number() != self.card1.get_number():
                 self.card2.hide_Card()
@@ -167,10 +157,8 @@ class MemoryGame(tk.Frame):
             self.game_state = 1
             self.turn += 1
             self.label_string.set(str(self.turn))
-            print "Turn: ", self.turn
-            print "card1: ", self.card1
-            print "(card2: ", self.card2, ")"
             
+
 # draw handler
 ##
 def draw(canvas, deck):

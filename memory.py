@@ -124,46 +124,48 @@ class MemoryGame(tk.Frame):
         # locals
         ##
         clicked_card = None
-        c1_index = 0
-        c2_index = 0
+        card1 = None
+        card2 = None
 
         # TESTS click functionality
         print "Clicked at ", event.x, event.y
-        print "Game state: ", self.game_state
+        print "Initial game state: ", self.game_state, "\n"
 
 
         for card in self.deck:
             if card.is_selected(event):
                 clicked_card = card
-                print "Clicked card: ", clicked_card
                 
                 if clicked_card.is_exposed():
                     return
         
                 clicked_card.expose_Card()  
-                print "Clicked card is now exposed? ", clicked_card.is_exposed()
+                # consider calling draw() from within expose_Card()
                 draw(canvas, self.deck)      
         
         # handle game states
         if self.game_state == 0:
-            c1_index = clicked_card
-            print "c1_index: ", c1_index
+            card1 = clicked_card
+            print "card1: ", card1
             self.game_state = 1
-            print "game_state: ", self.game_state
+            print "After-click game state: ", self.game_state, "\n"
     
         elif self.game_state == 1:
-            c2_index = clicked_card
-            print "c2_index: ", c2_index
+            card2 = clicked_card
+            print "card2: ", card2
             self.game_state = 2
-            print "game_state: ", self.game_state
+            print "After-click game state: ", self.game_state, "\n"
     
         else: 
-            if c2_index is not c1_index:
-                c2_index.hide_Card()
-                c1_index.hide_Card()
-                self.game_state = 1
-                self.turn += 1
+            if card2 is not card1:
+                card2.hide_Card()
+                card1.hide_Card()
+                # consider calling draw() from within hide_Card()
                 draw(canvas, self.deck)
+            card1 = clicked_card
+            self.game_state = 1
+            self.turn += 1
+            # TO-DO:  update label explicitly here with new turn number
 
            
 # draw handler
@@ -174,18 +176,6 @@ def draw(canvas, deck):
 
 # start frame and game
 ##
-# def main():      
-    # root.configure(background='black')
-    # game = MemoryGame(root)
-    # game.pack(side=TOP)
-# 
-    # w = Canvas(root, width=16*CARD_WIDTH, height=CARD_HEIGHT)
-    # w.bind("<Button-1>", game.mouseHandler)
-#     
-    # draw(w)
-    # Button(root, text='Reset', command=game.Reset).pack(side=LEFT)
-    # Button(root, text='Quit', command=root.quit).pack(side=LEFT)
-    # Label(root, text='Turn: ' + str(game.turn), font=('Helvetica',12), fg=# 'white', bg='black').pack(side=LEFT)
 
 if __name__ == '__main__':
     root = tk.Tk()

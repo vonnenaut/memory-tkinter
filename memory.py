@@ -3,7 +3,7 @@
 
 # import
 ##
-from Tkinter import *
+import Tkinter as tk
 import random
 
 
@@ -12,12 +12,19 @@ import random
 CARD_WIDTH = 65
 CARD_HEIGHT = 100
 DISTINCT_CARDS = 8
+canvas = None
 
 
 # classes
 ##
 class Card(object):
     """ represents each card in the matching game, keeping track of face-value, state (hidden or exposed), drawing the cards and keeping track of which card is selected via mouse click """
+
+    # globals
+    ##
+    CARD_WIDTH
+    CARD_HEIGHT
+
     def __init__(self, num, exp, loc):
         self.number = num
         self.exposed = exp
@@ -61,104 +68,133 @@ class Card(object):
         inside_vert = self.location[1] - CARD_HEIGHT <= event.y <= self.location[1]
         return  inside_horiz and inside_vert
 
-
-class MemoryGame(Frame):
+# main application class
+##
+class MemoryGame(tk.Frame):
     """ implements the game """
     # globals
-    global deck, game_state, turn, DISTINCT_CARDS, CARD_WIDTH, CARD_HEIGHT
+    ##
+    global DISTINCT_CARDS, CARD_WIDTH, CARD_HEIGHT, deck
 
-    game_state = 0  # int, game_state of game:
-                        # 0:  beginning of game
-                        # 1:  1 card has been picked/shown
-                        # 2:  2 cards have been picked/shown
-    turn = 1        # keeps track of number of turns
-
-    # set up deck
+    deck = []
+    # set up face values for the cards
     card_numbers = range(1, DISTINCT_CARDS + 1) * 2
-    random.shuffle(card_numbers)
-    deck = [Card(card_numbers[i], False, [CARD_WIDTH * i, CARD_HEIGHT]) for i in range(2 * DISTINCT_CARDS)]
-    
-    def __init__(self, parent=None, **kw):
+    # shuffle the values
+    random.shuffle(card_numbers)   
+    # instantiate deck as a list of instances of the Card class
+    deck = [Card(card_numbers[i], False, [i * CARD_WIDTH, CARD_HEIGHT]) for i in range(2 * DISTINCT_CARDS)]
+   
+    def __init__(self, parent, *args, **kwargs):
         """ initialize Frame and global variables """
-        Frame.__init__(self,parent, kw)
-        self.deck = deck
-        self. game_state =  game_state
-        self.turn = turn
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.deck = deck  
+        self.game_state =  0    # int, self.game_state of game:
+                                # 0:  beginning of game
+                                # 1:  1 card has been picked/shown
+                                # 2:  2 cards have been picked/shown
+        self.turn = 1           # keeps track of number of turns
+        self.makeWidgets()
 
     def makeWidgets(self):
-        """ create widgets """
-        #  Consider moving buttons and label here
-        pass
-        
+        """ set up GUI, i.e., create widgets """
+        # globals
+        global CARD_WIDTH, CARD_HEIGHT        
+    
+        # bind an event listener to the canvas and add the canvas to the root frame
+        canvas.bind("<Button-1>", self.mouseHandler)
+        canvas.pack()
+        # add buttons to the frame
+        tk.Button(root, text='Reset', command=self.Reset).pack(side="left")
+        tk.Button(root, text='Quit', command=root.quit).pack(side="left")
+        tk.Label(root, text='Turn: ' + str(self.turn), font=('Helvetica',12), fg='white', bg='black').pack(side="left")
+        # now draw everything
+        draw(canvas, self.deck)        
 
     def Reset(self):
         for card in self.deck:
             self.exposed = False
         self.turn = 1
         self.game_state = 0
+        draw(canvas, self.deck)
     
     def mouseHandler(self, event):
         """ handles user input, manages game state and status of cards """
-        global game_state, turn, c1_index, c2_index, w
+        
+        # locals
+        ##
+        clicked_card = None
+        c1_index = 0
+        c2_index = 0
 
         # TESTS click functionality
         print "Clicked at ", event.x, event.y
+        print "Game state: ", self.game_state
 
-        for card in deck:
+
+        for card in self.deck:
             if card.is_selected(event):
                 clicked_card = card
+                print "Clicked card: ", clicked_card
                 
-        if clicked_card.is_exposed():
-            return
+                if clicked_card.is_exposed():
+                    return
         
-        clicked_card.expose_Card()
+                clicked_card.expose_Card()  
+                print "Clicked card is now exposed? ", clicked_card.is_exposed()
+                draw(canvas, self.deck)      
         
         # handle game states
-        if game_state == 0:
+        if self.game_state == 0:
             c1_index = clicked_card
-            game_state = 1
+            print "c1_index: ", c1_index
+            self.game_state = 1
+            print "game_state: ", self.game_state
     
-        if game_state == 1:
+        elif self.game_state == 1:
             c2_index = clicked_card
-            game_state = 2
+            print "c2_index: ", c2_index
+            self.game_state = 2
+            print "game_state: ", self.game_state
     
-        if game_state == 2 and c2_index is not c1_index:
-            c2_index.hide_Card()
-            c1_index.hide_Card()
-            game_state = 1
-            turn += 1
-    
-        draw(w)
+        else: 
+            if c2_index is not c1_index:
+                c2_index.hide_Card()
+                c1_index.hide_Card()
+                self.game_state = 1
+                self.turn += 1
+                draw(canvas, self.deck)
 
            
 # draw handler
 ##
-def draw(canvas):
-    for Card in deck:
-        Card.draw_Card(canvas)
-    
+def draw(canvas, deck):
+    for card in deck:
+        card.draw_Card(canvas)    
 
 # start frame and game
 ##
-def main():
-    global w, turn
-
-    root = Tk()
-    root.configure(background='black')
-    game = MemoryGame(root)
-    game.pack(side=TOP)
-
-    w = Canvas(root, width=16*CARD_WIDTH, height=CARD_HEIGHT)
-    w.bind("<Button-1>", game.mouseHandler)
-    
-    draw(w)
-
-    Button(root, text='Reset', command=game.Reset).pack(side=LEFT)
-    Button(root, text='Quit', command=root.quit).pack(side=LEFT)
-    Label(root, text='Turn: ' + str(turn), font=('Helvetica',12), fg='white', bg='black').pack(side=LEFT)
-    w.pack()
-        
-    root.mainloop()
+# def main():      
+    # root.configure(background='black')
+    # game = MemoryGame(root)
+    # game.pack(side=TOP)
+# 
+    # w = Canvas(root, width=16*CARD_WIDTH, height=CARD_HEIGHT)
+    # w.bind("<Button-1>", game.mouseHandler)
+#     
+    # draw(w)
+    # Button(root, text='Reset', command=game.Reset).pack(side=LEFT)
+    # Button(root, text='Quit', command=root.quit).pack(side=LEFT)
+    # Label(root, text='Turn: ' + str(game.turn), font=('Helvetica',12), fg=# 'white', bg='black').pack(side=LEFT)
 
 if __name__ == '__main__':
-    main()
+    root = tk.Tk()
+    root.configure(background='black')
+    
+    # create canvas for drawing cards    
+    canvas = tk.Canvas(root, width=16*CARD_WIDTH, height=CARD_HEIGHT)
+    
+
+    # tk magic follows
+    MemoryGame(root).pack(side="top", fill="both", expand=True)
+    root.mainloop()

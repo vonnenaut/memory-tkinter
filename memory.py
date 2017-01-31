@@ -89,12 +89,17 @@ class MemoryGame(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.deck = deck  
-        self.game_state =  0    # int, self.game_state of game:
-                                # 0:  beginning of game
-                                # 1:  1 card has been picked/shown
-                                # 2:  2 cards have been picked/shown
-        self.turn = 1           # keeps track of number of turns
+        self.game_state =  0        # int, self.game_state of game:
+                                    # 0:  beginning of game
+                                    # 1:  1 card has been picked/shown
+                                    # 2:  2 cards have been picked/shown
+        self.turn = 1               # keeps track of number of turns
+        self.label_string = tk.StringVar()   # used to update the label for turn number
+        self.label_string.set(str(self.turn)) 
         self.makeWidgets()
+        self.clicked_card = None
+        self.card1 = None
+        self.card2 = None
 
     def makeWidgets(self):
         """ set up GUI, i.e., create widgets """
@@ -107,7 +112,8 @@ class MemoryGame(tk.Frame):
         # add buttons to the frame
         tk.Button(root, text='Reset', command=self.Reset).pack(side="left")
         tk.Button(root, text='Quit', command=root.quit).pack(side="left")
-        tk.Label(root, text='Turn: ' + str(self.turn), font=('Helvetica',12), fg='white', bg='black').pack(side="left")
+        # add label which updates based on turn number
+        tk.Label(root, text='Turn: ' + self.label_string.get(), font=('Helvetica',12), fg='white', bg='black').pack(side="left")
         # now draw everything
         draw(canvas, self.deck)        
 
@@ -120,13 +126,7 @@ class MemoryGame(tk.Frame):
     
     def mouseHandler(self, event):
         """ handles user input, manages game state and status of cards """
-        
-        # locals
-        ##
-        clicked_card = None
-        card1 = None
-        card2 = None
-
+       
         # TESTS click functionality
         print "Clicked at ", event.x, event.y
         print "Initial game state: ", self.game_state, "\n"
@@ -134,40 +134,39 @@ class MemoryGame(tk.Frame):
 
         for card in self.deck:
             if card.is_selected(event):
-                clicked_card = card
+                self.clicked_card = card
                 
-                if clicked_card.is_exposed():
+                if self.clicked_card.is_exposed():
                     return
         
-                clicked_card.expose_Card()  
+                self.clicked_card.expose_Card()  
                 # consider calling draw() from within expose_Card()
                 draw(canvas, self.deck)      
         
         # handle game states
         if self.game_state == 0:
-            card1 = clicked_card
-            print "card1: ", card1
+            self.card1 = self.clicked_card
+            print "card1: ", self.card1
             self.game_state = 1
             print "After-click game state: ", self.game_state, "\n"
     
         elif self.game_state == 1:
-            card2 = clicked_card
-            print "card2: ", card2
+            self.card2 = self.clicked_card
+            print "card2: ", self.card2
             self.game_state = 2
             print "After-click game state: ", self.game_state, "\n"
     
         else: 
-            if card2 is not card1:
-                card2.hide_Card()
-                card1.hide_Card()
+            if self.card2 is not self.card1:
+                self.card2.hide_Card()
+                self.card1.hide_Card()
                 # consider calling draw() from within hide_Card()
                 draw(canvas, self.deck)
-            card1 = clicked_card
+            self.card1 = self.clicked_card
             self.game_state = 1
             self.turn += 1
-            # TO-DO:  update label explicitly here with new turn number
-            ##  Look into StringVar()
-
+            self.label_string.set(str(self.turn))
+            print "Turn: ", self.turn
            
 # draw handler
 ##

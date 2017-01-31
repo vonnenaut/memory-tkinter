@@ -166,6 +166,7 @@ class MemoryGame(tk.Frame):
             self.game_state = 1
             self.turn += 1
             # TO-DO:  update label explicitly here with new turn number
+            ##  Look into StringVar()
 
            
 # draw handler

@@ -6,7 +6,6 @@
 import Tkinter as tk
 import random
 
-
 # globals
 ##
 CARD_WIDTH = 65
@@ -18,7 +17,7 @@ canvas = None
 # classes
 ##
 class Card(object):
-    """ represents each card in the matching game, keeping track of face-value, state (hidden or exposed), drawing the cards and keeping track of which card is selected via mouse click """
+    """ represents each card in the matching game, keeping track of face-value, state (hidden or exposed), drawing the cards and keeping track of which card is selected via mouse click.  Instantiated in MemoryGame class. """
 
     # globals
     ##
@@ -50,8 +49,8 @@ class Card(object):
     def __str__(self):
         return "Number is " + str(self.number) + ", exposed is " + str(self.exposed)    
 
-    # draw method for Cards
     def draw_Card(self, canvas):
+        """ draws cards as a green rectangle if hidden, or white with black numbering if exposed.  Called by draw() function. """
         loc = self.location
         card_corners = (loc[0], loc[1], loc[0] + CARD_WIDTH, loc[1] - CARD_HEIGHT)
 
@@ -62,8 +61,8 @@ class Card(object):
         else:
             canvas.create_rectangle(card_corners, fill='green', outline='black')
             
-    # selection method for Cards
     def is_selected(self, event):
+        """ helper method for MemoryGame.mouseHandler() to check if a card has been clicked """
         inside_horiz = self.location[0] <= event.x < self.location[0] + CARD_WIDTH
         inside_vert = self.location[1] - CARD_HEIGHT <= event.y <= self.location[1]
         return  inside_horiz and inside_vert
@@ -80,7 +79,7 @@ class MemoryGame(tk.Frame):
     # set up face values for the cards
     card_numbers = range(1, DISTINCT_CARDS + 1) * 2
     # shuffle the values
-    random.shuffle(card_numbers)   
+    # TEST -- UNCOMMENT:  random.shuffle(card_numbers)   
     # instantiate deck as a list of instances of the Card class
     deck = [Card(card_numbers[i], False, [i * CARD_WIDTH, CARD_HEIGHT]) for i in range(2 * DISTINCT_CARDS)]
    
@@ -121,16 +120,16 @@ class MemoryGame(tk.Frame):
         for card in self.deck:
             self.exposed = False
         self.turn = 1
+        self.label_string.set(self.turn)
         self.game_state = 0
+    
         draw(canvas, self.deck)
     
     def mouseHandler(self, event):
         """ handles user input, manages game state and status of cards """
-       
         # TESTS click functionality
         print "Clicked at ", event.x, event.y
-        print "Initial game state: ", self.game_state, "\n"
-
+        print "\nmouseHandler: Initial game state: ", self.game_state
 
         for card in self.deck:
             if card.is_selected(event):
@@ -147,17 +146,19 @@ class MemoryGame(tk.Frame):
         if self.game_state == 0:
             self.card1 = self.clicked_card
             print "card1: ", self.card1
+            print "card2: ", self.card2
             self.game_state = 1
             print "After-click game state: ", self.game_state, "\n"
     
         elif self.game_state == 1:
             self.card2 = self.clicked_card
+            print "card1: ", self.card1
             print "card2: ", self.card2
             self.game_state = 2
             print "After-click game state: ", self.game_state, "\n"
     
         else: 
-            if self.card2 is not self.card1:
+            if self.card2.get_number() != self.card1.get_number():
                 self.card2.hide_Card()
                 self.card1.hide_Card()
                 # consider calling draw() from within hide_Card()
@@ -167,24 +168,25 @@ class MemoryGame(tk.Frame):
             self.turn += 1
             self.label_string.set(str(self.turn))
             print "Turn: ", self.turn
-           
+            print "card1: ", self.card1
+            print "(card2: ", self.card2, ")"
+            
 # draw handler
 ##
 def draw(canvas, deck):
+    """ draws cards on canvas """
     for card in deck:
         card.draw_Card(canvas)    
 
 # start frame and game
 ##
-
 if __name__ == '__main__':
     root = tk.Tk()
     root.configure(background='black')
     
     # create canvas for drawing cards    
-    canvas = tk.Canvas(root, width=16*CARD_WIDTH, height=CARD_HEIGHT)
-    
+    canvas = tk.Canvas(root, width=16*CARD_WIDTH, height=CARD_HEIGHT)    
 
-    # tk magic follows
+    # tk magic follows here
     MemoryGame(root).pack(side="top", fill="both", expand=True)
     root.mainloop()

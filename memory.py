@@ -79,7 +79,7 @@ class MemoryGame(tk.Frame):
     # set up face values for the cards
     card_numbers = range(1, DISTINCT_CARDS + 1) * 2
     # shuffle the values
-    # TEST -- UNCOMMENT:  random.shuffle(card_numbers)   
+    random.shuffle(card_numbers)   
     # instantiate deck as a list of instances of the Card class
     deck = [Card(card_numbers[i], False, [i * CARD_WIDTH, CARD_HEIGHT]) for i in range(2 * DISTINCT_CARDS)]
    

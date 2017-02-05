@@ -21,8 +21,7 @@ class Card(object):
 
     # globals
     ##
-    CARD_WIDTH
-    CARD_HEIGHT
+    global CARD_WIDTH, CARD_HEIGHT, deck
 
     def __init__(self, num, exp, loc):
         self.number = num
@@ -40,10 +39,12 @@ class Card(object):
     # expose the Card
     def expose_Card(self):
         self.exposed = True
+        draw(canvas, deck)
     
     # hide the Card       
     def hide_Card(self):
         self.exposed = False
+        draw(canvas, deck)
         
     # string method for Cards    
     def __str__(self):
@@ -66,6 +67,7 @@ class Card(object):
         inside_horiz = self.location[0] <= event.x < self.location[0] + CARD_WIDTH
         inside_vert = self.location[1] - CARD_HEIGHT <= event.y <= self.location[1]
         return  inside_horiz and inside_vert
+
 
 # main application class
 ##
@@ -94,7 +96,7 @@ class MemoryGame(tk.Frame):
                                     # 2:  2 cards have been picked/shown
         self.turn = 1               # keeps track of number of turns
         self.label_string = tk.StringVar()   # used to update the label for turn number
-        self.label_string.set(str(self.turn)) 
+        self.label_string.set("Turn: " + str(self.turn)) 
         self.makeWidgets()
         self.clicked_card = None
         self.card1 = None
@@ -112,17 +114,16 @@ class MemoryGame(tk.Frame):
         tk.Button(root, text='Reset', command=self.Reset).pack(side="left")
         tk.Button(root, text='Quit', command=root.quit).pack(side="left")
         # add label which updates based on turn number
-        tk.Label(root, text='Turn: ' + self.label_string.get(), font=('Helvetica',12), fg='white', bg='black').pack(side="left")
+        tk.Label(root, textvariable=self.label_string, font=('Helvetica',12), fg='white', bg='black').pack(side="left")
         # now draw everything
         draw(canvas, self.deck)        
 
     def Reset(self):
         for card in self.deck:
-            self.exposed = False
+            card.hide_Card()
         self.turn = 1
-        self.label_string.set(self.turn)
+        self.label_string.set("Turn: " + str(self.turn))
         self.game_state = 0
-    
         draw(canvas, self.deck)
     
     def mouseHandler(self, event):
@@ -134,9 +135,7 @@ class MemoryGame(tk.Frame):
                 if self.clicked_card.is_exposed():
                     return
         
-                self.clicked_card.expose_Card()  
-                # consider calling draw() from within expose_Card()
-                draw(canvas, self.deck)      
+                self.clicked_card.expose_Card()        
         
         # handle game states
         if self.game_state == 0:
@@ -151,12 +150,10 @@ class MemoryGame(tk.Frame):
             if self.card2.get_number() != self.card1.get_number():
                 self.card2.hide_Card()
                 self.card1.hide_Card()
-                # consider calling draw() from within hide_Card()
-                draw(canvas, self.deck)
             self.card1 = self.clicked_card
             self.game_state = 1
             self.turn += 1
-            self.label_string.set(str(self.turn))
+            self.label_string.set("Turn: " + str(self.turn))
             
 
 # draw handler

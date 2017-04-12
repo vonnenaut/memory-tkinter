@@ -27,8 +27,7 @@ class Card(object):
         self.number = num
         self.exposed = exp
         self.location = loc
-        
-    # definition of getter for number
+   
     def get_number(self):
         return self.number
     
@@ -45,8 +44,7 @@ class Card(object):
     def hide_Card(self):
         self.exposed = False
         draw(canvas, deck)
-        
-    # string method for Cards    
+
     def __str__(self):
         return "Number is " + str(self.number) + ", exposed is " + str(self.exposed)    
 
